@@ -1,13 +1,7 @@
-# Stage 1: Build Assets with Node
-FROM node:20-alpine AS build-assets
-WORKDIR /app
-COPY package*.json ./
-RUN npm install
-COPY . .
-RUN npm run build
-
-# Stage 2: PHP Application
 FROM php:8.3-apache
+
+# Enable Apache rewrite
+RUN a2enmod rewrite
 
 # Install system dependencies
 RUN apt-get update && apt-get install -y \
@@ -18,36 +12,43 @@ RUN apt-get update && apt-get install -y \
     unzip \
     git \
     curl \
-    && a2enmod rewrite \
-    && docker-php-ext-install pdo_mysql mbstring exif pcntl bcmath gd
+    && docker-php-ext-install pdo_mysql mbstring bcmath gd \
+    && apt-get clean \
+    && rm -rf /var/lib/apt/lists/*
 
 # Install Composer
-COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
+COPY --from=composer:2 /usr/bin/composer /usr/bin/composer
 
+# Set working directory
 WORKDIR /var/www/html
 
-# Copy application files
+# Copy Laravel source
 COPY . .
-# Copy compiled assets from Stage 1
-COPY --from=build-assets /app/public/build ./public/build
 
 # Install PHP dependencies
-RUN composer install --no-dev --optimize-autoloader
+RUN composer install \
+    --no-dev \
+    --optimize-autoloader \
+    --no-interaction
 
-# --- FIX 500 ERRORS ---
-# 1. Create SQLite file if missing
-RUN mkdir -p database && touch database/database.sqlite
+# Fix permissions (VERY IMPORTANT on Render)
+RUN chown -R www-data:www-data \
+    storage \
+    bootstrap/cache
 
-# 2. Fix Permissions (Crucial for Render)
-RUN chown -R www-data:www-data /var/www/html/storage /var/www/html/bootstrap/cache /var/www/html/database
-RUN chmod -R 775 /var/www/html/storage /var/www/html/bootstrap/cache /var/www/html/database
+RUN chmod -R 775 \
+    storage \
+    bootstrap/cache
 
-# 3. Configure Apache for Laravel
-ENV APACHE_DOCUMENT_ROOT /var/www/html/public
-RUN sed -ri -e 's!/var/www/html!${APACHE_DOCUMENT_ROOT}!g' /etc/apache2/sites-available/*.conf
-RUN sed -ri -e 's!/var/www/!${APACHE_DOCUMENT_ROOT}!g' /etc/apache2/apache2.conf /etc/apache2/conf-available/*.conf
+# Set Apache document root to /public
+ENV APACHE_DOCUMENT_ROOT=/var/www/html/public
+
+RUN sed -ri -e 's!/var/www/html!${APACHE_DOCUMENT_ROOT}!g' \
+    /etc/apache2/sites-available/*.conf \
+    /etc/apache2/apache2.conf \
+    /etc/apache2/conf-available/*.conf
 
 EXPOSE 80
 
-# Start script: Migrate database then start Apache
-CMD php artisan migrate --force && apache2-foreground
+# Run migrations (safe) and start Apache
+CMD php artisan migrate --force || true && apache2-foreground
