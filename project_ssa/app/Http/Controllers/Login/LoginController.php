@@ -9,37 +9,60 @@ use Illuminate\Support\Facades\Session;
  use Illuminate\Support\Facades\Auth;
 class LoginController extends Controller
 {
-    public function login(Request $request)
+public function login(Request $request)
 {
-    // 1️⃣ Login via API
-    $loginResponse = Http::post('http://localhost:5000/api/users/', [
-        'name' => $request->name,
-        'password' => $request->password,
-        'role' => $request->role,
-    ]);
+    $messages = [
+        'name.required'     => 'Please enter your username.',
+        'password.required' => 'Password is required to log in.',
+        'role.required'     => 'Please select a role.',
+    ];
 
-    if ($loginResponse->failed()) {
-        return back()->withErrors([
-            'login' => 'Login failed! Invalid username or password.'
+    $validated = $request->validate([
+        'name'     => 'required',
+        'password' => 'required',
+        'role'     => 'required',
+    ], $messages);
+
+    // 1. Prepare Guzzle Client
+    $client = new \GuzzleHttp\Client(['cookies' => true]);
+
+    // Use a proper login endpoint
+    $url = config('app.url') . '/api/users';
+// dd($url);
+    try {
+        // 2. Prepare login data
+        $datalogin = [
+            'name'     => $request->name,
+            'password' => $request->password,
+            'role'     => $request->role,
+        ];
+
+        // 3. Send POST Request to API
+        $response = $client->post($url, [
+            'headers' => ['Accept' => 'application/json'],
+            'json'    => $datalogin,
         ]);
+        dd($response);
+        // 4. Decode Response and Handle Success
+        $apiData = json_decode($response->getBody(), true);
+// dd($apiData);
+        if (!empty($apiData['token'])) {
+            // Store token in session if needed
+            session(['api_token' => $apiData['token']]);
+
+            return redirect()->route('dashboard.index')->with('success', 'Login successful!');
+        }
+
+        return back()->withInput()->withErrors(['login' => 'Login failed. No token received.']);
+
+    } catch (\GuzzleHttp\Exception\ClientException $e) {
+        $errorMessage = json_decode($e->getResponse()->getBody()->getContents(), true)['message'] ?? 'Invalid credentials.';
+        return back()->withInput()->withErrors(['login' => $errorMessage]);
+
+    } catch (\Exception $e) {
+        return back()->withInput()->withErrors(['login' => 'Could not connect to the authentication server.']);
     }
-
-    $user = $loginResponse->json();
-    Session::put('user', $user);
-
-    // 2️⃣ Fetch students from API
-    $studentResponse = Http::get('http://localhost:5000/api/students/getAll');
-
-    if ($studentResponse->failed()) {
-        return back()->with('error', 'Backend error: ' . $studentResponse->body());
-    }
-
-    $students = $studentResponse->json(); // ✅ decode JSON to array
-// dd($students);
-    // 3️⃣ Pass data to Blade view
-    return view('dashboard.index', compact('students'));
 }
-
 public function logout(Request $request)
 {
     Auth::logout(); // Logs out the user
