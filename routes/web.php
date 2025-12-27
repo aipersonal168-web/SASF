@@ -7,11 +7,15 @@ use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\AttendanceController;
 use App\Http\Controllers\Dashboard\DashbordController;
 use App\Http\Controllers\StudentClassController;
+
 Route::get('/', function () {
-    return view('welcome');
+    return view('index');
 });
-Route::post('/login', [LoginController::class, 'login'])->name('login');
-Route::get('/login', [LoginController::class, 'login'])->name('login');
+
+Route::get('/login', [LoginController::class, 'index'])->name('index');
+Route::post('/login/stores', [LoginController::class, 'store'])->name('login.store');
+
+
 Route::post('/logout', [LoginController::class, 'logout'])->name('logout');
 
 // middleware group check.user

@@ -4,6 +4,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="csrf-token" content="{{ csrf_token() }}">
   <title>Sign In</title>
   @vite(['resources/css/app.css', 'resources/js/app.js'])
 </head>
@@ -18,7 +19,7 @@
     <h3 class="text-center fst-italic">Sign In [SAS]</h3>
 
     <!-- Use route('login') or your controller route -->
-    <form action="{{ route('login') }}" method="POST">
+    <form id="loginForm" method="POST">
       @csrf
       <div class="mb-3">
         <label for="name" class="form-label">User Name</label>
@@ -47,9 +48,11 @@
         </div>
       </div>
 
-      <button type="submit" class="btn btn-primary w-100 my-3">Sign In</button>
+      <button type="button" class="btn btn-primary w-100 my-3" onclick="loginStudent()">Sign In</button>
     </form>
   </div>
 </body>
 
 </html>
+
+@include('scriptIndex.footer')
