@@ -17,6 +17,8 @@ return Application::configure(basePath: dirname(__DIR__))
     $middleware->alias([
         'check.user' => CheckUserLoggedIn::class,
     ]);
+    // 2. Trust all proxies (Fixes HTTPS/Mixed Content on Hosting)
+        $middleware->trustProxies(at: '*');
 })
 
     ->withExceptions(function (Exceptions $exceptions) {
