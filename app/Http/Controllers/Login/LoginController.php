@@ -26,7 +26,7 @@ class LoginController extends Controller
     $client = new \GuzzleHttp\Client(['cookies' => true]);
 
     // Point directly to your Render API backend
-    $url = 'https://sas-9z4y.onrender.com/api/users';
+    $url = 'https://sas-ecrt.onrender.com/api/users';
 
     try {
         $datalogin = [
@@ -41,6 +41,7 @@ class LoginController extends Controller
         ]);
 
         $apiData = json_decode($response->getBody(), true);
+        dd($apiData);
 
         if (!empty($apiData['token'])) {
             session(['api_token' => $apiData['token']]);
@@ -50,10 +51,12 @@ class LoginController extends Controller
         return back()->withInput()->withErrors(['login' => 'Login failed. No token received.']);
 
     } catch (\GuzzleHttp\Exception\ClientException $e) {
+        dd($e);
         $errorMessage = json_decode($e->getResponse()->getBody()->getContents(), true)['message'] ?? 'Invalid credentials.';
         return back()->withInput()->withErrors(['login' => $errorMessage]);
 
     } catch (\Exception $e) {
+        dd($e);
         return back()->withInput()->withErrors(['login' => 'Could not connect to the authentication server.']);
     }
 }
