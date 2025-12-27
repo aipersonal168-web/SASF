@@ -40,17 +40,13 @@ public function logout(Request $request)
 }
 
 
-
-//
-
-
-
 public function store(Request $request)
 {
     try {
+        // dd($request->all());
         // 1️⃣ Login via API
-        $loginResponse = Http::withoutVerifying()->post(
-            'https://sas-ecrt.onrender.com/api/login/',
+            $loginResponse = Http::withoutVerifying()->post(
+            'https://sas-ecrt.onrender.com/api/login',
             [
                 'name'     => $request->name,
                 'password' => $request->pass,
@@ -64,6 +60,7 @@ public function store(Request $request)
             ]);
         }
 
+        // Save user session
         $user = $loginResponse->json();
         Session::put('user', $user);
 
@@ -77,20 +74,21 @@ public function store(Request $request)
         }
 
         $students = $studentResponse->json();
-        // dd($students);
-        // 3️⃣ Pass data to Blade view
-        return view('dashboard.index', compact('students'));
+
+        // 3️⃣ Show dashboard when login success
+        // return view('dashboard.index', compact('students'));
+         // ✅ Return JSON with redirect URL
+        return response()->json([
+    'success'  => true,
+    'message'  => 'Login successful!',
+    'redirect' => route('dashboard') // your dashboard route
+]);
 
     } catch (\Exception $e) {
-        dd($e);
-        // Log the error for debugging
         Log::error('API error: '.$e->getMessage(), ['trace' => $e->getTraceAsString()]);
-
-        // Show a friendly error message
         return back()->with('error', 'Server error: please try again later.');
     }
 }
-
 
 
 

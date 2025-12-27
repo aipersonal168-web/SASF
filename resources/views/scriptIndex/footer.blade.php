@@ -30,7 +30,7 @@
 <script>
     function loginStudent() {
     var roles = $("input[name='role']:checked").val();
-    
+
     $.ajaxSetup({
         headers: {
             'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
@@ -38,26 +38,31 @@
     });
 
     $.ajax({
-        url: "{{ route('login.store') }}", // Use the route name here
+        url: "{{ route('login.store') }}", // Laravel route
         type: 'POST',
         dataType: 'json',
         data: {
             name: $("#name").val(),
             pass: $("#password").val(),
-            role: roles, // Fixed: used colon instead of equals
+            role: roles
         },
         success: function (data) {
-            if (data.success) {
-                iziToast.success({
-                    title: 'Success',
+           if (data.success) {
+        iziToast.success({
+            title: 'Success',
+            message: data.message,
+            position: 'topRight'
+        });
+
+        // Redirect to dashboard
+        window.location.href = data.redirect;
+
+            } else {
+                iziToast.error({
+                    title: 'Error',
                     message: data.message,
                     position: 'topRight'
                 });
-
-                // Redirect to dashboard after a short delay
-                setTimeout(function() {
-                    window.location.href = data.redirect;
-                }, 1000);
             }
         },
         error: function (xhr) {
