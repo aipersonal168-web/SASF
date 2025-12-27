@@ -8,11 +8,11 @@ use App\Http\Controllers\AttendanceController;
 use App\Http\Controllers\Dashboard\DashbordController;
 use App\Http\Controllers\StudentClassController;
 
-Route::get('/', function () {
-    return view('index');
-});
+// Route::get('/', function () {
+//     return view('index');
+// });
 
-Route::get('/login', [LoginController::class, 'index'])->name('index');
+Route::get('/', [LoginController::class, 'index'])->name('index');
 Route::post('/login/stores', [LoginController::class, 'store'])->name('login.store');
 
 
