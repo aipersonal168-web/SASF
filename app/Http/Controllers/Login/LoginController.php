@@ -9,57 +9,113 @@ use Illuminate\Support\Facades\Session;
  use Illuminate\Support\Facades\Auth;
 class LoginController extends Controller
 {
-    public function login(Request $request)
+     
+
+    use Illuminate\Http\Request;
+use GuzzleHttp\Client;
+use GuzzleHttp\Exception\ClientException;
+
+public function login(Request $request)
 {
-    $messages = [
-        'name.required'     => 'Please enter your username.',
-        'password.required' => 'Password is required to log in.',
-        'role.required'     => 'Please select a role.',
-    ];
+    // ===============================
+    // 1️⃣ DEBUG FORM INPUT (OPTIONAL)
+    // ===============================
+    dd($request->all());
 
-    $validated = $request->validate([
-        'name'     => 'required',
-        'password' => 'required',
-        'role'     => 'required',
-    ], $messages);
+    // 2️⃣ Validate input
+    $request->validate([
+        'name' => 'required',
+        'pass' => 'required',
+        'role' => 'required',
+    ], [
+        'name.required' => 'Please enter your username.',
+        'pass.required' => 'Password is required to log in.',
+        'role.required' => 'Please select a role.',
+    ]);
 
-    $client = new \GuzzleHttp\Client(['cookies' => true]);
+    // 3️⃣ Create HTTP client
+    $client = new Client([
+        'timeout' => 10,
+    ]);
 
-    // Point directly to your Render API backend
-    $url = 'https://sas-ecrt.onrender.com/api/users';
+    // 4️⃣ Node.js API URL
+    $url = 'https://sas-ecrt.onrender.com/api/login';
 
     try {
-        $datalogin = [
-            'name'     => $request->name,
-            'password' => $request->password,
-            'role'     => $request->role,
-        ];
-
+        // 5️⃣ Send POST request
         $response = $client->post($url, [
-            'headers' => ['Accept' => 'application/json'],
-            'json'    => $datalogin,
+            'headers' => [
+                'Accept' => 'application/json',
+            ],
+            'json' => [
+                'name' => $request->name,
+                'pass' => $request->pass,
+                'role' => $request->role,
+            ],
         ]);
 
-        $apiData = json_decode($response->getBody(), true);
+        // ===============================
+        // 6️⃣ DEBUG RAW RESPONSE (OPTIONAL)
+        // ===============================
+        // dd(
+        //     $response->getStatusCode(),
+        //     (string) $response->getBody()
+        // );
+
+        // 7️⃣ Decode response
+        $apiData = json_decode($response->getBody()->getContents(), true);
+
+        // ===============================
+        // 8️⃣ DEBUG DECODED JSON (OPTIONAL)
+        // ===============================
         dd($apiData);
 
+        // 9️⃣ Login success
         if (!empty($apiData['token'])) {
-            session(['api_token' => $apiData['token']]);
-            return redirect()->route('dashboard.index')->with('success', 'Login successful!');
+            session([
+                'api_token' => $apiData['token'],
+            ]);
+
+            return redirect()
+                ->route('dashboard')
+                ->with('success', 'Login successful!');
         }
 
-        return back()->withInput()->withErrors(['login' => 'Login failed. No token received.']);
+        // 🔟 Invalid credentials
+        return back()->withErrors([
+            'login' => $apiData['message'] ?? 'Invalid credentials.',
+        ])->withInput();
 
-    } catch (\GuzzleHttp\Exception\ClientException $e) {
-        dd($e);
-        $errorMessage = json_decode($e->getResponse()->getBody()->getContents(), true)['message'] ?? 'Invalid credentials.';
-        return back()->withInput()->withErrors(['login' => $errorMessage]);
+    } catch (ClientException $e) {
+        // ===============================
+        // 1️⃣1️⃣ DEBUG API ERROR (OPTIONAL)
+        // ===============================
+        dd(
+            $e->getResponse()->getStatusCode(),
+            (string) $e->getResponse()->getBody()
+        );
+
+        $body = json_decode(
+            $e->getResponse()->getBody()->getContents(),
+            true
+        );
+
+        return back()->withErrors([
+            'login' => $body['message'] ?? 'Invalid credentials.',
+        ])->withInput();
 
     } catch (\Exception $e) {
-        dd($e);
-        return back()->withInput()->withErrors(['login' => 'Could not connect to the authentication server.']);
+        // ===============================
+        // 1️⃣2️⃣ SERVER / CONNECTION ERROR
+        // ===============================
+        return back()->withErrors([
+            'login' => 'Authentication server is unavailable.',
+        ])->withInput();
     }
 }
+
+
+
 public function logout(Request $request)
 {
     Auth::logout(); // Logs out the user
