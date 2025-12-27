@@ -9,7 +9,7 @@ use Illuminate\Support\Facades\Session;
  use Illuminate\Support\Facades\Auth;
 class LoginController extends Controller
 {
-public function login(Request $request)
+    public function login(Request $request)
 {
     $messages = [
         'name.required'     => 'Please enter your username.',
@@ -23,33 +23,27 @@ public function login(Request $request)
         'role'     => 'required',
     ], $messages);
 
-    // 1. Prepare Guzzle Client
     $client = new \GuzzleHttp\Client(['cookies' => true]);
 
-    // Use a proper login endpoint
-    $url = config('app.url') . '/api/users';
-// dd($url);
+    // Point directly to your Render API backend
+    $url = 'https://sas-9z4y.onrender.com/api/users';
+
     try {
-        // 2. Prepare login data
         $datalogin = [
             'name'     => $request->name,
             'password' => $request->password,
             'role'     => $request->role,
         ];
 
-        // 3. Send POST Request to API
         $response = $client->post($url, [
             'headers' => ['Accept' => 'application/json'],
             'json'    => $datalogin,
         ]);
-        dd($response);
-        // 4. Decode Response and Handle Success
-        $apiData = json_decode($response->getBody(), true);
-// dd($apiData);
-        if (!empty($apiData['token'])) {
-            // Store token in session if needed
-            session(['api_token' => $apiData['token']]);
 
+        $apiData = json_decode($response->getBody(), true);
+
+        if (!empty($apiData['token'])) {
+            session(['api_token' => $apiData['token']]);
             return redirect()->route('dashboard.index')->with('success', 'Login successful!');
         }
 
