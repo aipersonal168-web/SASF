@@ -8,6 +8,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Http; // Use the Http facade
 use Illuminate\Support\Facades\Session;
  use Illuminate\Support\Facades\Auth;
+ use Illuminate\Support\Facades\Log;
 class LoginController extends Controller
 {
      
@@ -41,38 +42,54 @@ public function logout(Request $request)
 
 
 //
-    public function store(Request $request)
+
+
+
+public function store(Request $request)
 {
-    // 1️⃣ Login via API
-    $loginResponse = Http::post('https://sas-ecrt.onrender.com/api/login/', [
-        'name' => $request->name,
-        'password' => $request->pass,
-        'role' => $request->role,
-    ]);
+    try {
+        // 1️⃣ Login via API
+        $loginResponse = Http::withoutVerifying()->post(
+            'https://sas-ecrt.onrender.com/api/login/',
+            [
+                'name'     => $request->name,
+                'password' => $request->pass,
+                'role'     => $request->role,
+            ]
+        );
 
-    if ($loginResponse->failed()) {
-        return back()->withErrors([
-            'login' => 'Login failed! Invalid username or password.'
-        ]);
+        if ($loginResponse->failed()) {
+            return back()->withErrors([
+                'login' => 'Login failed! Invalid username or password.'
+            ]);
+        }
+
+        $user = $loginResponse->json();
+        Session::put('user', $user);
+
+        // 2️⃣ Fetch students from API
+        $studentResponse = Http::withoutVerifying()->get(
+            'https://sas-ecrt.onrender.com/api/students/getAll'
+        );
+
+        if ($studentResponse->failed()) {
+            return back()->with('error', 'Backend error: ' . $studentResponse->body());
+        }
+
+        $students = $studentResponse->json();
+        // dd($students);
+        // 3️⃣ Pass data to Blade view
+        return view('dashboard.index', compact('students'));
+
+    } catch (\Exception $e) {
+        dd($e);
+        // Log the error for debugging
+        Log::error('API error: '.$e->getMessage(), ['trace' => $e->getTraceAsString()]);
+
+        // Show a friendly error message
+        return back()->with('error', 'Server error: please try again later.');
     }
-
-    $user = $loginResponse->json();
-    Session::put('user', $user);
-
-    // 2️⃣ Fetch students from API
-    $studentResponse = Http::get('http://localhost:3000/api/students/getAll');
-
-    if ($studentResponse->failed()) {
-        return back()->with('error', 'Backend error: ' . $studentResponse->body());
-    }
-
-    $students = $studentResponse->json(); // ✅ decode JSON to array
-// dd($students);
-    // 3️⃣ Pass data to Blade view
-    return view('dashboard.index', compact('students'));
 }
-
-
 
 
 

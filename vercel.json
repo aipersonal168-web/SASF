@@ -22,7 +22,7 @@
     "env": {
         "APP_ENV": "production",
         "APP_DEBUG": "true",
-        "APP_URL": "https://sas-ecrt.onrender.com",
+        "APP_URL": "https://sas-ecrt.onrender.com/",
         "APP_KEY": "base64:KZQRvQ+8Ctmpp/kv0l5GcECC1GkTPgEE6hNxuMPBW8g=",
 
         "APP_CONFIG_CACHE": "/tmp/config.php",
