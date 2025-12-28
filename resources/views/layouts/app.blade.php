@@ -134,8 +134,9 @@ use Illuminate\Support\Facades\Session;
 $sessionData = Session::get('user'); 
 // dd($sessionData);
 // If your session stores user info directly:
-$userImage = $sessionData['user']['images'] ?? null;
-$userName  = $sessionData['user']['name'] ?? null;
+$userImage = $sessionData['images'] ?? null;
+// dd($userImage);
+$userName  = $sessionData['name'] ?? null;
 
 // Check if not admin
 if ($userName !== 'admin') {
