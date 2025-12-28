@@ -147,8 +147,8 @@ if ($userName !== 'admin') {
         <!-- Sidebar -->
         <div class="sidebar">
             <div class="profile">
-                <img src="{{ $userImage ? asset('image_user/' . $userImage) : asset('default.png') }}" alt="User Image"
-                    width="60">
+                <img src="{{ $userImage ? asset('image_user/' . $userImage) : asset('image_user/t.jpg') }}"
+                    alt="User Image" width="60">
 
                 <h3>Smart Attendance (<strong>{{ $userName }}</strong>)</h3>
             </div>
