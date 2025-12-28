@@ -61,47 +61,48 @@ setInterval(update, 1000);
 @endsection
 
 <script>
-    async function fetchGBFS() {
-    try {
-        // Direct API call
-        const response = await fetch('http://localhost:5000/gbfs/predict');
-        const data = await response.json();
+    // async function fetchGBFS() {
+    // try {
+    //     // Direct API call
+    //     // const response = await fetch('http://localhost:5000/gbfs/predict');
+    //     const data = await response.json();
 
-        // Update total safely
-        document.getElementById('gbfs-total').innerText = data.total ?? 0;
+    //     // Update total safely
+    //     document.getElementById('gbfs-total').innerText = data.total ?? 0;
         
-    } catch (error) {
-        console.error('Error fetching GBFS:', error);
-    }
-}
+    // } catch (error) {
+    //     console.error('Error fetching GBFS:', error);
+    // }
+// }
 
-// Initial fetch on page load
-window.onload = fetchGBFS;
+// // Initial fetch on page load
+// window.onload = fetchGBFS;
 
-// Auto-fetch every 5 seconds
-setInterval(fetchGBFS, 5000);
+// // Auto-fetch every 5 seconds
+// setInterval(fetchGBFS, 5000);
 
+// 
 </script>
 
 
-<script>
-    async function fetchDashboardData() {
-    try {
-        // 1️⃣ Fetch total students
-        const studentResponse = await fetch('http://localhost:5000/api/students/getAll');
-        const studentData = await studentResponse.json();
-        const studentCount = Array.isArray(studentData) ? studentData.length : 0;
-        document.getElementById('student-total').innerText = studentCount;
+// <script>
+    //     async function fetchDashboardData() {
+//     try {
+//         // 1️⃣ Fetch total students
+//         const studentResponse = await fetch('http://localhost:5000/api/students/getAll');
+//         const studentData = await studentResponse.json();
+//         const studentCount = Array.isArray(studentData) ? studentData.length : 0;
+//         document.getElementById('student-total').innerText = studentCount;
 
 
-    } catch (error) {
-        console.error('Error fetching dashboard data:', error);
-    }
-}
+//     } catch (error) {
+//         console.error('Error fetching dashboard data:', error);
+//     }
+// }
 
-// ✅ Run on page load
-window.addEventListener('load', fetchDashboardData);
+// // ✅ Run on page load
+// window.addEventListener('load', fetchDashboardData);
 
-// ✅ Auto-fetch every 5 seconds
-setInterval(fetchDashboardData, 5000);
+// // ✅ Auto-fetch every 5 seconds
+// setInterval(fetchDashboardData, 5000);
 </script>
