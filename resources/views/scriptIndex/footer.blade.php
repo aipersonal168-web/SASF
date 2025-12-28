@@ -52,9 +52,8 @@
             position: 'topRight'
         });
 
-        // Redirect to dashboard
-        window.location.href = data.redirect;
-
+         window.location.href = data.redirect;
+       
             } else {
                 iziToast.error({
                     title: 'Error',

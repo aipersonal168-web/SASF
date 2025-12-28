@@ -45,7 +45,6 @@ public function logout(Request $request)
 
 public function store(Request $request)
 {
-    // ✅ 1️⃣ Validation
     $request->validate([
         'name' => 'required',
         'pass' => 'required',
@@ -57,34 +56,27 @@ public function store(Request $request)
     ]);
 
     try {
-        // ✅ 2️⃣ Guzzle Client
         $client = new Client([
             'cookies' => true,
             'timeout' => 10,
-            'verify'  => false, // 🔥 FIX SSL ERROR (DEV ONLY)
+            'verify'  => false, // DEV ONLY
         ]);
 
-        // ✅ 3️⃣ API URL
         $host = config('app.url');
-        $url  = $host . '/api/login';
 
-        // ✅ 4️⃣ POST Login Request
+        // ✅ Login API
+        $url  = $host . '/api/login';
         $response = $client->request('POST', $url, [
-            'headers' => [
-                'Accept' => 'application/json',
-            ],
-            'json' => [
-                'name'     => $request->name,
-                'pass' => $request->pass, // ✅ FIX
-                'role'     => $request->role,
+            'headers' => ['Accept' => 'application/json'],
+            'json'    => [
+                'name' => $request->name,
+                'pass' => $request->pass,
+                'role' => $request->role,
             ],
         ]);
 
-        // ✅ 5️⃣ Decode Response
         $data = json_decode($response->getBody(), true);
-        // dd($data);
 
-        // ❌ API-level login failure
         if (isset($data['success']) && $data['success'] === false) {
             return response()->json([
                 'success' => false,
@@ -92,19 +84,29 @@ public function store(Request $request)
             ], 401);
         }
 
-        // ✅ 6️⃣ Save session
+        // ✅ Get students
+        $urlStudent = $host . '/api/students/getAll';
+        $responseStudent = $client->request('GET', $urlStudent, [
+            'headers' => ['Accept' => 'application/json'],
+        ]);
+
+        $students = json_decode($responseStudent->getBody(), true);
+        $studentCount = count($students);
+
+        // ✅ Store in session
+        Session::put('students', $students);
+        Session::put('studentCount', $studentCount);
         Session::put('user', $data['user'] ?? $data);
         Session::put('token', $data['token'] ?? null);
 
-        // ✅ 7️⃣ Success
+        // ✅ Return JSON with redirect
         return response()->json([
             'success'  => true,
             'message'  => 'Login successful!',
-            'redirect' => route('dashboard'),
+            'redirect' => route('dashboard')
         ]);
 
     } catch (\GuzzleHttp\Exception\ClientException $e) {
-        // ❌ 401 / 422
         return response()->json([
             'success' => false,
             'message' => 'Invalid username or password',
@@ -119,6 +121,7 @@ public function store(Request $request)
         ], 500);
     }
 }
+
 
 
 
