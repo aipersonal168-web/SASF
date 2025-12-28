@@ -40,7 +40,7 @@ setInterval(update, 1000);
         <div class="card">
             <div class="card-body">
                 <h4>Student New 👥</h4>
-                 <p class="fs-3 fw-bold" id="student-total"></p>
+                <p class="fs-3 fw-bold" id="student-total"></p>
             </div>
         </div>
     </div>
@@ -61,7 +61,7 @@ setInterval(update, 1000);
 @endsection
 
 <script>
-async function fetchGBFS() {
+    async function fetchGBFS() {
     try {
         // Direct API call
         const response = await fetch('http://localhost:5000/gbfs/predict');
@@ -69,7 +69,7 @@ async function fetchGBFS() {
 
         // Update total safely
         document.getElementById('gbfs-total').innerText = data.total ?? 0;
-
+        
     } catch (error) {
         console.error('Error fetching GBFS:', error);
     }
@@ -85,7 +85,7 @@ setInterval(fetchGBFS, 5000);
 
 
 <script>
-async function fetchDashboardData() {
+    async function fetchDashboardData() {
     try {
         // 1️⃣ Fetch total students
         const studentResponse = await fetch('http://localhost:5000/api/students/getAll');

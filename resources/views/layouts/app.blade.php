@@ -156,11 +156,11 @@ if ($userName !== 'admin') {
             <div class="menu-item" onclick="goTo('/attendance')">📝 Attendance</div>
             <div class="menu-item" onclick="goTo('/notifications')">🔔 Notifications</div>
             <form action="{{ route('logout') }}" method="POST">
-            @csrf
-            <button type="submit" class="menu-item  mt-3" style="all: unset; cursor: pointer;">
-                🚪 Logout
-            </button>
-        </form>
+                @csrf
+                <button type="submit" class="menu-item  mt-3" style="all: unset; cursor: pointer;">
+                    🚪 Logout
+                </button>
+            </form>
 
 
 
@@ -170,11 +170,11 @@ if ($userName !== 'admin') {
             <div class="menu-item" onclick="goTo('/attendance')">📝 Attendance</div>
             <div class="menu-item" onclick="goTo('/notifications')">🔔 Notifications</div>
             <form action="{{ route('logout') }}" method="POST">
-            @csrf
-            <button type="submit" class="menu-item  mt-3" style="all: unset; cursor: pointer;">
-                🚪 Logout
-            </button>
-        </form>
+                @csrf
+                <button type="submit" class="menu-item  mt-3" style="all: unset; cursor: pointer;">
+                    🚪 Logout
+                </button>
+            </form>
 
             @endif
         </div>

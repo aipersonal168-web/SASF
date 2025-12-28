@@ -40,53 +40,83 @@ public function logout(Request $request)
 }
 
 
+
+
+
 public function store(Request $request)
 {
+    // ✅ 1️⃣ Validation
+    $request->validate([
+        'name' => 'required',
+        'pass' => 'required',
+        'role' => 'required',
+    ], [
+        'name.required' => 'Username is required',
+        'pass.required' => 'Password is required',
+        'role.required' => 'Role is required',
+    ]);
+
     try {
-        // dd($request->all());
-        // 1️⃣ Login via API
-            $loginResponse = Http::withoutVerifying()->post(
-            'https://sas-ecrt.onrender.com/api/login',
-            [
+        // ✅ 2️⃣ Guzzle Client
+        $client = new Client([
+            'cookies' => true,
+            'timeout' => 10,
+            'verify'  => false, // 🔥 FIX SSL ERROR (DEV ONLY)
+        ]);
+
+        // ✅ 3️⃣ API URL
+        $host = config('app.url');
+        $url  = $host . '/api/login';
+
+        // ✅ 4️⃣ POST Login Request
+        $response = $client->request('POST', $url, [
+            'headers' => [
+                'Accept' => 'application/json',
+            ],
+            'json' => [
                 'name'     => $request->name,
-                'password' => $request->pass,
+                'pass' => $request->pass, // ✅ FIX
                 'role'     => $request->role,
-            ]
-        );
+            ],
+        ]);
 
-        if ($loginResponse->failed()) {
-            return back()->withErrors([
-                'login' => 'Login failed! Invalid username or password.'
-            ]);
+        // ✅ 5️⃣ Decode Response
+        $data = json_decode($response->getBody(), true);
+        // dd($data);
+
+        // ❌ API-level login failure
+        if (isset($data['success']) && $data['success'] === false) {
+            return response()->json([
+                'success' => false,
+                'message' => $data['message'] ?? 'Login failed',
+            ], 401);
         }
 
-        // Save user session
-        $user = $loginResponse->json();
-        Session::put('user', $user);
+        // ✅ 6️⃣ Save session
+        Session::put('user', $data['user'] ?? $data);
+        Session::put('token', $data['token'] ?? null);
 
-        // 2️⃣ Fetch students from API
-        $studentResponse = Http::withoutVerifying()->get(
-            'https://sas-ecrt.onrender.com/api/students/getAll'
-        );
-
-        if ($studentResponse->failed()) {
-            return back()->with('error', 'Backend error: ' . $studentResponse->body());
-        }
-
-        $students = $studentResponse->json();
-
-        // 3️⃣ Show dashboard when login success
-        // return view('dashboard.index', compact('students'));
-         // ✅ Return JSON with redirect URL
+        // ✅ 7️⃣ Success
         return response()->json([
-    'success'  => true,
-    'message'  => 'Login successful!',
-    'redirect' => route('dashboard') // your dashboard route
-]);
+            'success'  => true,
+            'message'  => 'Login successful!',
+            'redirect' => route('dashboard'),
+        ]);
+
+    } catch (\GuzzleHttp\Exception\ClientException $e) {
+        // ❌ 401 / 422
+        return response()->json([
+            'success' => false,
+            'message' => 'Invalid username or password',
+        ], 401);
 
     } catch (\Exception $e) {
-        Log::error('API error: '.$e->getMessage(), ['trace' => $e->getTraceAsString()]);
-        return back()->with('error', 'Server error: please try again later.');
+        Log::error('Login API Error: ' . $e->getMessage());
+
+        return response()->json([
+            'success' => false,
+            'message' => 'Server error, please try again later',
+        ], 500);
     }
 }
 
