@@ -14,7 +14,7 @@ class DashbordController extends Controller
  public function index()
 {
     // Call Node.js API
-    $response = Http::get('http://localhost:5000/api/students/count');
+    $response = Http::get('https://sas-ecrt.onrender.com/api/students/count');
 
     // Convert response to array
     $data = $response->json();
