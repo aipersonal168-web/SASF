@@ -154,6 +154,7 @@ if ($userName !== 'admin') {
                 <h3>Smart Attendance (<strong>{{ $userName }}</strong>)</h3>
             </div>
             @if($userName !== 'admin')
+            <div class="menu-item" onclick="goTo('/dashboard')">📊 Dashboard</div>
             <div class="menu-item" onclick="goTo('/attendance')">📝 Attendance</div>
             <div class="menu-item" onclick="goTo('/notifications')">🔔 Notifications</div>
             <form action="{{ route('logout') }}" method="POST">
@@ -166,7 +167,6 @@ if ($userName !== 'admin') {
 
 
             @else
-            <div class="menu-item" onclick="goTo('/dashboard')">📊 Dashboard</div>
             <div class="menu-item" onclick="goTo('/students')">🎓 Student</div>
             <div class="menu-item" onclick="goTo('/attendance')">📝 Attendance</div>
             <div class="menu-item" onclick="goTo('/notifications')">🔔 Notifications</div>

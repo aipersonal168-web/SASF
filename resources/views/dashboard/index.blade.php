@@ -40,8 +40,7 @@ setInterval(update, 1000);
         <div class="card">
             <div class="card-body">
                 <h4>Student New 👥</h4>
-                <p class="fs-3 fw-bold" id="student-total"></p>
-                <h2>Total Students: {{ session('studentCount', 0) }}</h2>
+                <p class="fs-3 fw-bold" id="student-total">{{ session('studentCount', 0) }}</p>
             </div>
         </div>
     </div>
@@ -51,7 +50,7 @@ setInterval(update, 1000);
         <div class="card">
             <div class="card-body">
                 <h4>Notifications 🔔</h4>
-                <p class="fs-3 fw-bold" id="gbfs-total">
+                <p class="fs-3 fw-bold" id="gbfs-total">{{ session('gbfsCount', 0) }}</p>
             </div>
         </div>
     </div>

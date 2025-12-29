@@ -92,10 +92,19 @@ public function store(Request $request)
 
         $students = json_decode($responseStudent->getBody(), true);
         $studentCount = count($students);
+        // ✅ Get students notification
+        $urlStudent = $host . '/api/gbfs/predict';
+        $responseStudent = $client->request('GET', $urlStudent, [
+            'headers' => ['Accept' => 'application/json'],
+        ]);
 
+        $gbfs = json_decode($responseStudent->getBody(), true);
+        $gbfsCount = $gbfs['total'];
+        // dd($gbfsCount);
         // ✅ Store in session
         Session::put('students', $students);
         Session::put('studentCount', $studentCount);
+        Session::put('gbfsCount', $gbfsCount);
         Session::put('user', $data['user'] ?? $data);
         Session::put('token', $data['token'] ?? null);
 
