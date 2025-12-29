@@ -7,63 +7,7 @@ use GuzzleHttp\Client;
 use Illuminate\Support\Facades\Validator;
 class AttendanceController extends Controller
 {
-    public function indeqx() {
-            try {
-                $client = new Client();
-
-                // Years
-                $years = json_decode(
-                    $client->get("http://localhost:5000/api/years/getAll")->getBody(),
-                    true
-                );
-                $datas = array_values($years['data']);
-
-                //       // Convert to Khmer
-                // $data = collect($dataYears)->map(fn ($item) => [
-                //     'id'   => $item['id'],
-                //     'name' => NumberHelper::toKhmer($item['name']),
-                // ])->toArray();
-                
-                // Semesters
-                $semester = json_decode(
-                    $client->get("http://localhost:5000/api/semesters/getAll")->getBody(),
-                    true
-                );
-                $semesters = array_values($semester['data']);
-
-            
-
-                // Shifts
-                $shift = json_decode(
-                    $client->get("http://localhost:5000/api/shifts/getAll")->getBody(),
-                    true
-                );
-                $shifts = array_values($shift['data']);
-
-
-                // Rooms (LOWERCASE URL)
-                $rooms = json_decode(
-                    $client->get("http://localhost:5000/api/rooms/getAll")->getBody(),
-                    true
-                );
-                $rooms = array_values($rooms['data']);
-                // Convert to Khmer
-            //    dd($rooms);
-
-                    // dd($rooms);
-                return view(
-                    'dashboard.attendance.index',
-                    compact('rooms', 'shifts', 'semesters', 'datas')
-                );
-
-            } catch (\Exception $e) {
-                return response()->json([
-                    'success' => false,
-                    'message' => $e->getMessage()
-                ], 500);
-            }
-        }
-    
+   
  public function index()
     {
         try {
@@ -160,8 +104,7 @@ class AttendanceController extends Controller
 public function search(Request $request)
 {
 
-    // dd($request->all());
-    // ✅ AJAX-friendly validation
+
     $validator = Validator::make($request->all(), [
         'year'      => 'required|integer',
         'semester'  => 'required|integer',
@@ -186,18 +129,27 @@ public function search(Request $request)
     }
 
     try {
-        $client = new Client();
-        $response = $client->get(
-            'http://localhost:5000/api/class/searchData',
-            [
-                'query' => [
+         $client = new Client([
+            'cookies' => true,
+            'timeout' => 10,
+            'verify'  => false, // DEV ONLY
+        ]);
+        
+          $host = config('app.url');
+
+        // ✅ Login API
+        $url  = $host . '/api/class/searchData';
+        $response = $client->request('GET', $url, [
+            'headers' => ['Accept' => 'application/json'],
+            'query' => [
                     'yearId'     => (int) $request->year,
                     'semesterId' => (int) $request->semester,
                     'shiftId'    => (int) $request->shift,
                     'roomId'     => (int) $request->room,
                 ]
-            ]
-        );
+        ]);
+
+      
 
         $result = json_decode($response->getBody(), true);
 
@@ -251,10 +203,29 @@ public function store(Request $request)
         ]);
 
         // 🔹 Send EXACT data to Node.js
-        $client = new Client();
+
+
+         $client = new Client([
+            'cookies' => true,
+            'timeout' => 10,
+            'verify'  => false, // DEV ONLY
+        ]);
+
+        $host = config('app.url');
+
+        // ✅ Login API
+        $url  = $host . '/api/attendance/store';
+        // $response = $client->request('POST', $url, [
+        //     'headers' => ['Accept' => 'application/json'],
+        //     'json' => $request->all(),
+        // ]);
+
+        // $data = json_decode($response->getBody(), true);
+        
+        // $client = new Client();
 
         $response = $client->post(
-            'http://localhost:5000/api/attendance/store',
+            $url,
             [
                 'headers' => [
                     'Accept' => 'application/json',
@@ -264,7 +235,7 @@ public function store(Request $request)
         );
 
         $result = json_decode($response->getBody(), true);
-    
+        // dd($result);
         // ✅ Handle API structure safely
        return response()->json([
                 'success' => true,
@@ -272,6 +243,7 @@ public function store(Request $request)
             ]);
 
     } catch (\Throwable $e) {
+        dd($e);
         return back()->with('error', $e->getMessage());
     }
 }
