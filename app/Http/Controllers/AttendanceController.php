@@ -7,7 +7,7 @@ use GuzzleHttp\Client;
 use Illuminate\Support\Facades\Validator;
 class AttendanceController extends Controller
 {
-    public function index() {
+    public function indeqx() {
             try {
                 $client = new Client();
 
@@ -64,6 +64,99 @@ class AttendanceController extends Controller
             }
         }
     
+ public function index()
+    {
+        try {
+            // Create HTTP client
+            $client = new Client([
+            'cookies' => true,
+            'timeout' => 10,
+            'verify'  => false, // DEV ONLY
+        ]);
+
+            // Use app.url from config
+            $baseUrl = config('app.url'); // from .env APP_URL
+            $apiUrl  = $baseUrl . '/api/years/getAll';
+
+            // Call API
+            $response = $client->get($apiUrl, [
+                'headers' => [
+                    'Accept' => 'application/json',
+                ],
+            ]);
+
+            // Decode JSON
+            $years = json_decode($response->getBody()->getContents(), true);
+
+            // Get result safely
+            $datas = $years['data'] ?? [];
+            // Use app.url from 
+          
+            // get api  semester
+            $apiUrl  = $baseUrl . '/api/semesters/getAll';
+
+            // Call API
+            $response = $client->get($apiUrl, [
+                'headers' => [
+                    'Accept' => 'application/json',
+                ],
+            ]);
+
+            // Decode JSON
+            $semester = json_decode($response->getBody()->getContents(), true);
+
+            // Get result safely
+            $semesters = $semester['data'] ?? [];
+            
+            // get api  sgift
+            $apiUrl  = $baseUrl . '/api/shifts/getAll';
+
+            // Call API
+            $response = $client->get($apiUrl, [
+                'headers' => [
+                    'Accept' => 'application/json',
+                ],
+            ]);
+
+            // Decode JSON
+            $shift = json_decode($response->getBody()->getContents(), true);
+
+            // Get result safely
+            $shifts = $shift['data'] ?? [];
+            
+            // get api  Room
+            $apiUrl  = $baseUrl . '/api/rooms/getAll';
+
+            // Call API
+            $response = $client->get($apiUrl, [
+                'headers' => [
+                    'Accept' => 'application/json',
+                ],
+            ]);
+
+            // Decode JSON
+            $room = json_decode($response->getBody()->getContents(), true);
+
+            // Get result safely
+            $rooms = $room['data'] ?? [];
+
+            
+            // Return view
+            return view('dashboard.attendance.index', compact('semesters', 'datas','shifts','rooms'));
+
+        } catch (\Throwable $e) {
+            // If API fails, still load page
+            return view('dashboard.notification.index', [
+                'data'  => [],
+                'error' => $e->getMessage(),
+            ]);
+        }
+    }
+
+
+
+
+        
 public function search(Request $request)
 {
 

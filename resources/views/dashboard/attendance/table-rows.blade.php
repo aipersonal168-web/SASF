@@ -1,4 +1,4 @@
-@foreach ($attendanceData as $item)
+{{-- @foreach ($attendanceData as $item)
 <tr class="attendance-row">
     <td>{{ $loop->iteration }}</td>
 
@@ -44,4 +44,4 @@
 </td>
 
 
-</tr>
+</tr> --}}
