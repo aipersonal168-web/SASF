@@ -215,15 +215,6 @@ public function store(Request $request)
 
         // ✅ Login API
         $url  = $host . '/api/attendance/store';
-        // $response = $client->request('POST', $url, [
-        //     'headers' => ['Accept' => 'application/json'],
-        //     'json' => $request->all(),
-        // ]);
-
-        // $data = json_decode($response->getBody(), true);
-        
-        // $client = new Client();
-
         $response = $client->post(
             $url,
             [
