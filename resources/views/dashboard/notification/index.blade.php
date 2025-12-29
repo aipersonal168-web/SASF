@@ -4,7 +4,7 @@
 @section('content')
 <div class="container mt-5">
     <h3>🔔 Notifications</h3>
-
+{{-- @dd($data); --}}
     <ul class="list-group mt-3">
         @foreach($data as $student)
         <li class="list-group-item d-flex align-items-start">
