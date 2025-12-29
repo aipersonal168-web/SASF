@@ -12,14 +12,21 @@ class StudentClassController extends Controller
    public function createClassStudent(){
        try {
 
-        $client = new Client();
+         $client = new Client([
+            'cookies' => true,
+            'timeout' => 10,
+            'verify'  => false,
+        ]);
 
-            // Years
-            $years = json_decode(
-                $client->get("http://localhost:5000/api/years/getAll")->getBody(),
-                true
-            );
-            $dataYears = array_values($years['data']);
+        $baseUrl = config('app.url');
+        $apiUrl = $baseUrl . '/api/years/getAll';
+
+       $response = $client->request('GET', $apiUrl, [
+            'headers' => ['Accept' => 'application/json'],
+        ]);
+       $years = json_decode($response->getBody()->getContents(), true);
+        // Years
+      $dataYears = array_values($years['data']);
 
                   // Convert to Khmer
             $datas = collect($dataYears)->map(fn ($item) => [
@@ -28,11 +35,15 @@ class StudentClassController extends Controller
             ])->toArray();
             
             // Semesters
-            $semester = json_decode(
-                $client->get("http://localhost:5000/api/semesters/getAll")->getBody(),
-                true
-            );
-            $semestersdata = array_values($semester['data']);
+            
+
+            $apiUrl = $baseUrl . '/api/semesters/getAll';
+
+       $response = $client->request('GET', $apiUrl, [
+            'headers' => ['Accept' => 'application/json'],
+        ]);
+          $semester = json_decode($response->getBody()->getContents(), true);
+          $semestersdata = array_values($semester['data']);
 
              // Convert to Khmer
             $semesters = collect($semestersdata)->map(fn ($item) => [
@@ -41,24 +52,30 @@ class StudentClassController extends Controller
             ])->toArray();
 
             // Shifts
-            $shift = json_decode(
-                $client->get("http://localhost:5000/api/shifts/getAll")->getBody(),
-                true
-            );
+            
+              $apiUrl = $baseUrl . '/api/shifts/getAll';
+
+       $response = $client->request('GET', $apiUrl, [
+            'headers' => ['Accept' => 'application/json'],
+        ]);
+          $shift = json_decode($response->getBody()->getContents(), true);
             $shifts = array_values($shift['data']);
 
-                  // Rooms (LOWERCASE URL)
-            $rooms = json_decode(
-                $client->get("http://localhost:5000/api/rooms/getAll")->getBody(),
-                true
-            );
-            $rooms = array_values($rooms['data']);
+              
+
+             $apiUrl = $baseUrl . '/api/rooms/getAll';
+
+       $response = $client->request('GET', $apiUrl, [
+            'headers' => ['Accept' => 'application/json'],
+        ]);
+          $room = json_decode($response->getBody()->getContents(), true);
+            $rooms = array_values($room['data']);
              // Convert to Khmer
 
             return response()->json([
-    'success' => true,
-    'html' => view('dashboard.students.createclass', compact('datas', 'semesters', 'shifts','rooms'))->render(),
-], 200);    
+            'success' => true,
+            'html' => view('dashboard.students.createclass', compact('datas', 'semesters', 'shifts','rooms'))->render(),
+        ], 200);    
 
        } catch (\Exception $e) {
            return response()->json([
@@ -69,10 +86,19 @@ class StudentClassController extends Controller
      }
 
 
-     public function store(Request $request)
+
+
+
+
+public function store(Request $request)
 {
     try {
-        // dd($request);
+        $client = new Client([
+            'cookies' => true,
+            'timeout' => 10,
+            'verify'  => false, // DEV ONLY
+        ]);
+
         $totalInput = (int) $request->total_students;
 
         if ($totalInput < 1) {
@@ -83,17 +109,24 @@ class StudentClassController extends Controller
         }
 
         // 1️⃣ Get students from Node.js API
-        $response = Http::get('http://localhost:5000/api/students/getAll');
+        $baseUrl = config('app.url');
+        $apiUrl  = $baseUrl . '/api/students/getAll';
 
-        if ($response->failed()) {
+        $response = $client->request('GET', $apiUrl, [
+            'headers' => ['Accept' => 'application/json'],
+        ]);
+
+        // Decode JSON into array
+        $students = json_decode($response->getBody()->getContents(), true);
+
+        if (!is_array($students)) {
             return response()->json([
                 'success' => false,
                 'message' => 'Cannot connect to student API',
-                'status' => $response->status()
+                'status'  => $response->getStatusCode()
             ], 500);
         }
 
-        $students = $response->json();
         $totalApiStudents = count($students);
 
         // 2️⃣ Validate total input
@@ -108,38 +141,40 @@ class StudentClassController extends Controller
         $insertData = [];
         for ($i = 0; $i < $totalInput; $i++) {
             $insertData[] = [
-                 // match Node.js field
-                'st_id' => $students[$i]['id'], // match Node.js field
-                'student_id' => $students[$i]['student_id'], // match Node.js field
+                'st_id'        => $students[$i]['id'],
+                'student_id'   => $students[$i]['student_id'],
                 'student_name' => $students[$i]['student_name'],
-                'gender' => $students[$i]['gender'],
+                'gender'       => $students[$i]['gender'],
                 'year_id'      => (int) $request->year_id,
                 'semester_id'  => (int) $request->semester_id,
                 'shift_id'     => (int) $request->shift_id,
                 'room_id'      => (int) $request->room_id,
             ];
         }
-        // dd($insertData);
+
         // 4️⃣ Send to Node.js API as JSON
-        $storeResponse = Http::withHeaders([
-            'Content-Type' => 'application/json'
-        ])->post('http://localhost:5000/api/class/storeData', [
-            'students' => $insertData
+        $apiUrl  = $baseUrl . '/api/class/storeData';
+        $storeResponse = $client->request('POST', $apiUrl, [
+            'headers' => ['Accept' => 'application/json'],
+            'json'    => ['students' => $insertData],
         ]);
 
+        $storeData = json_decode($storeResponse->getBody()->getContents(), true);
+
         // 5️⃣ Check response
-        if ($storeResponse->failed()) {
+        if ($storeResponse->getStatusCode() !== 200) {
             return response()->json([
                 'success' => false,
-                'message' => $storeResponse->json()['message'] ?? 'Insert failed in attendance API',
-                'status' => $storeResponse->status(),
-                'body' => $storeResponse->body()
+                'message' => $storeData['message'] ?? 'Insert failed in attendance API',
+                'status'  => $storeResponse->getStatusCode(),
+                'body'    => $storeData
             ], 500);
         }
 
+        // ✅ Success alert
         return response()->json([
-            'success' => true,
-            'message' => "Successfully inserted {$totalInput} students",
+            'success'  => true,
+            'message'  => "Successfully inserted {$totalInput} students",
             'inserted' => $insertData
         ]);
 

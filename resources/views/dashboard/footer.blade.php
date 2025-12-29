@@ -322,8 +322,6 @@ function deleteRecord(route) {
 // add student new class
 
 function addclassStudent() {
-    // Debug alert
-
     $.ajaxSetup({
         headers: {
             'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
@@ -354,6 +352,11 @@ function addclassStudent() {
                 const modalEl = document.getElementById('exampleModal');
                 const modalInstance = bootstrap.Modal.getInstance(modalEl);
                 if (modalInstance) modalInstance.hide();
+                 setTimeout(function () {
+                    location.reload();
+                }, 1500);
+
+
 
                 // Optional: update table dynamically
                 // updateTableRow(data.data);
@@ -366,14 +369,24 @@ function addclassStudent() {
             }
         },
         error: function (xhr) {
+            let response = xhr.responseJSON;
+
             if (xhr.status === 422) {
-                let errors = xhr.responseJSON.errors;
-                let messages = Object.values(errors).flat().join("\n");
-                iziToast.error({
-                    title: 'Validation Error',
-                    message: messages,
-                    position: 'topRight'
-                });
+                // Laravel validation errors OR custom message
+                if (response.errors) {
+                    let messages = Object.values(response.errors).flat().join("\n");
+                    iziToast.error({
+                        title: 'Validation Error',
+                        message: messages,
+                        position: 'topRight'
+                    });
+                } else {
+                    iziToast.error({
+                        title: 'Error',
+                        message: response.message || 'Validation failed.',
+                        position: 'topRight'
+                    });
+                }
             } else if (xhr.status === 419) {
                 iziToast.error({
                     title: 'Error',
@@ -383,12 +396,11 @@ function addclassStudent() {
             } else {
                 iziToast.error({
                     title: 'Error',
-                    message: 'An unexpected error occurred',
+                    message: response?.message || 'An unexpected error occurred',
                     position: 'topRight'
                 });
             }
         }
     });
 }
-    
 </script>
