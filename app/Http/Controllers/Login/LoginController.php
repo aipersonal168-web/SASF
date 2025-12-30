@@ -116,10 +116,16 @@ public function store(Request $request)
         ]);
 
     } catch (\GuzzleHttp\Exception\ClientException $e) {
-        return response()->json([
-            'success' => false,
-            'message' => 'Invalid username or password',
-        ], 401);
+        // Get raw response body
+    $body = $e->getResponse()->getBody()->getContents();
+
+    // Decode JSON
+    $data = json_decode($body, true);
+
+    return response()->json([
+        'success' => false,
+        'message' => $data['message'] ?? 'Login failed',
+    ], $e->getCode()); // 401
 
     } catch (\Exception $e) {
         Log::error('Login API Error: ' . $e->getMessage());
