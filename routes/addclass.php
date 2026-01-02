@@ -8,3 +8,4 @@ use App\Http\Controllers\StudentClassController; // <-- Add semicolon here
 Route::get('/class/searchData', [StudentClassController::class, 'createClassStudent'])->name('class.searchData');
 Route::post('/class/storeData', [StudentClassController::class, 'store'])->name('class.storeData');
 
+//fkijhi
